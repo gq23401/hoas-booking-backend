@@ -1,0 +1,37 @@
+app = "hoas-booking-api"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP_ENV = "production"
+  APP_PORT = "8080"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  auto_stop_machines = true
+  auto_start_machines = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+[resources]
+  [resources.vm]
+    cpu_kind = "shared"
+    cpus = 1
+    memory_mb = 256
