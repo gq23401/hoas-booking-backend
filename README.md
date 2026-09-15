@@ -14,10 +14,11 @@ Multi-tenant SaaS booking system for Finnish housing companies built with Go, Ec
 ## Run locally
 ```bash
 docker compose up -d postgres redis
-cp .env.example .env  # set DB_PASSWORD=hoas_secret
+cp .env.example .env
 go mod tidy && go run ./cmd/api
 curl http://localhost:8080/health
 ```
 
 ## Architecture
-Dependencies point inward only. `main.go` is the only file allowed to import everything else.
+Dependencies point inward only. Domain never imports infrastructure.
+main.go is the only file allowed to import everything else.
