@@ -31,6 +31,7 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
+	URL             string
 	Host            string
 	Port            string
 	Name            string
@@ -48,6 +49,9 @@ func (d DatabaseConfig) DSN() string {
 }
 
 func (d DatabaseConfig) MigrationURL() string {
+	if d.URL != "" {
+		return d.URL
+	}
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		d.User, d.Password, d.Host, d.Port, d.Name, d.SSLMode)
 }
@@ -90,10 +94,11 @@ func Load() (*Config, error) {
 			LaundryBookAheadWeeks: 8,
 		},
 		Database: DatabaseConfig{
+			URL:  getEnv("DATABASE_URL", ""),
 			Host: getEnv("DB_HOST", "localhost"), Port: getEnv("DB_PORT", "5432"),
-			Name: requireEnv("DB_NAME"), User: requireEnv("DB_USER"), Password: requireEnv("DB_PASSWORD"),
+			Name: requireEnvOrDefault("DB_NAME", "DATABASE_URL"), User: getEnv("DB_USER", "postgres"), Password: getEnv("DB_PASSWORD", ""),
 			SSLMode: getEnv("DB_SSLMODE", "disable"), MaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
-			MaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 5),
+			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 5),
 			ConnMaxLifetime: time.Duration(getEnvInt("DB_CONN_MAX_LIFETIME_MIN", 5)) * time.Minute,
 		},
 		Redis:  RedisConfig{Addr: getEnv("REDIS_ADDR", "localhost:6379"), Password: getEnv("REDIS_PASSWORD", ""), DB: getEnvInt("REDIS_DB", 0)},
@@ -118,6 +123,16 @@ func requireEnv(key string) string {
 		panic(fmt.Sprintf("required env var %q not set", key))
 	}
 	return v
+}
+
+func requireEnvOrDefault(key, fallbackKey string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	if os.Getenv(fallbackKey) != "" {
+		return "" // will be ignored when DATABASE_URL is set
+	}
+	panic(fmt.Sprintf("required env var %q not set", key))
 }
 
 func getEnvInt(key string, fallback int) int {
