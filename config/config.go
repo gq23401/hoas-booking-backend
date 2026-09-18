@@ -98,7 +98,7 @@ func Load() (*Config, error) {
 			Host: getEnv("DB_HOST", "localhost"), Port: getEnv("DB_PORT", "5432"),
 			Name: requireEnvOrDefault("DB_NAME", "DATABASE_URL"), User: getEnv("DB_USER", "postgres"), Password: getEnv("DB_PASSWORD", ""),
 			SSLMode: getEnv("DB_SSLMODE", "disable"), MaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
-			MaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 5),
+			MaxIdleConns:    getEnvInt("DB_MAX_IDLE_CONNS", 5),
 			ConnMaxLifetime: time.Duration(getEnvInt("DB_CONN_MAX_LIFETIME_MIN", 5)) * time.Minute,
 		},
 		Redis:  RedisConfig{Addr: getEnv("REDIS_ADDR", "localhost:6379"), Password: getEnv("REDIS_PASSWORD", ""), DB: getEnvInt("REDIS_DB", 0)},
@@ -134,6 +134,8 @@ func requireEnvOrDefault(key, fallbackKey string) string {
 	}
 	panic(fmt.Sprintf("required env var %q not set", key))
 }
+
+func getEnvInt(key string, fallback int) int {
 	v := os.Getenv(key)
 	if v == "" {
 		return fallback
